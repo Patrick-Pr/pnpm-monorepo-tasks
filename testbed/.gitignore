@@ -1,0 +1,25 @@
+# Dependencies and pnpm cache
+node_modules/
+.pnpm-store/
+
+# Build outputs and caches
+dist/
+build/
+.cache/
+*.tsbuildinfo
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Logs
+*.log
+
+# Local environment configuration
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# macOS metadata
+.DS_Store
