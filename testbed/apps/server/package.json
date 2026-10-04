@@ -5,16 +5,20 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx src/main.ts",
-    "dev:watch": "tsx --watch src/main.ts"
+    "dev:watch": "tsx --watch src/main.ts",
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "devDependencies": {
+    "@types/node": "^26.6.4",
+    "tsx": "^4.23.15",
     "typescript": "^7.0.2"
   },
   "dependencies": {
-    "effect": "^3.22.2"
+    "@effect/platform-node": "4.0.0",
+    "effect": "4.0.0"
   }
 }
