@@ -3,6 +3,8 @@ package items
 type Item struct {
 	TitleText       string
 	DescriptionText string
+	Path            string
+	PackageName     string
 }
 
 func (i Item) Title() string {

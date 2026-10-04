@@ -1,12 +1,17 @@
 package delegate
 
 import (
+	"fmt"
+	"os/exec"
+
 	"charm.land/bubbles/v2/key"
 	"charm.land/bubbles/v2/list"
 	tea "charm.land/bubbletea/v2"
 	"github.com/Patrick-Pr/pnpm-monorepo-tasks/internal/ui/items"
 	"github.com/Patrick-Pr/pnpm-monorepo-tasks/internal/ui/styles"
 )
+
+type commandFinishedMsg struct{ err error }
 
 func NewItemDelegate(keys *DelegateKeyMap, styles *styles.Styles) list.DefaultDelegate {
 	d := list.NewDefaultDelegate()
@@ -24,7 +29,16 @@ func NewItemDelegate(keys *DelegateKeyMap, styles *styles.Styles) list.DefaultDe
 		case tea.KeyPressMsg:
 			switch {
 			case key.Matches(msg, keys.Choose):
-				return m.NewStatusMessage(styles.StatusMessage.Render("You chose " + title))
+				// return m.NewStatusMessage(styles.StatusMessage.Render("You chose " + title))
+				item, ok := m.SelectedItem().(items.Item)
+				if !ok {
+					return nil
+				}
+				script := fmt.Sprintf("pnpm -F %s %s", item.PackageName, item.TitleText)
+				cmd := exec.Command("sh", "-c", script)
+				return tea.ExecProcess(cmd, func(err error) tea.Msg {
+					return commandFinishedMsg{err: err}
+				})
 
 			case key.Matches(msg, keys.Remove):
 				index := m.Index()
@@ -57,7 +71,7 @@ type DelegateKeyMap struct {
 	Remove key.Binding
 }
 
-// Additional short help entries. This satisfies the help.KeyMap interface and
+// ShortHelp Additional short help entries. This satisfies the help.KeyMap interface and
 // is entirely optional.
 func (d DelegateKeyMap) ShortHelp() []key.Binding {
 	return []key.Binding{
@@ -66,7 +80,7 @@ func (d DelegateKeyMap) ShortHelp() []key.Binding {
 	}
 }
 
-// Additional full help entries. This satisfies the help.KeyMap interface and
+// FullHelp Additional full help entries. This satisfies the help.KeyMap interface and
 // is entirely optional.
 func (d DelegateKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{

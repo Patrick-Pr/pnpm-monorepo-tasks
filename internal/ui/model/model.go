@@ -1,13 +1,17 @@
 package model
 
 import (
+	"log"
+	"os"
 	"sync"
 
 	"charm.land/bubbles/v2/key"
 	"charm.land/bubbles/v2/list"
 	tea "charm.land/bubbletea/v2"
+	"github.com/Patrick-Pr/pnpm-monorepo-tasks/internal/service/pnpm"
 	"github.com/Patrick-Pr/pnpm-monorepo-tasks/internal/ui/delegate"
 	itemgenerator "github.com/Patrick-Pr/pnpm-monorepo-tasks/internal/ui/itemGenerator"
+	item "github.com/Patrick-Pr/pnpm-monorepo-tasks/internal/ui/items"
 	"github.com/Patrick-Pr/pnpm-monorepo-tasks/internal/ui/styles"
 )
 
@@ -20,6 +24,7 @@ type Model struct {
 	itemGenerator *itemgenerator.RandomItemGenerator
 	keys          *listKeyMap
 	delegateKeys  *delegate.DelegateKeyMap
+	workspaceRoot *pnpm.PnpmWorkspaceRoot
 }
 
 func (m Model) Init() tea.Cmd {
@@ -93,9 +98,20 @@ func (m Model) View() tea.View {
 }
 
 func InitialModel() Model {
+	// Parsing the current directory to find the workspace root.
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Fatalln("Could not get the current Directory!")
+	}
+	workspace, err := pnpm.ParseWorkspace(cwd)
+	if err != nil {
+		log.Fatalf("Failed to parse workspace: %v", err)
+	}
+
 	// Initialize the Model and list.
 	m := Model{}
 	m.styles = styles.NewStyles(false) // default to dark background styles
+	m.workspaceRoot = &workspace
 
 	delegateKeys := delegate.NewDelegateKeyMap()
 	listKeys := newListKeyMap()
@@ -103,13 +119,19 @@ func InitialModel() Model {
 	// Make initial list of items.
 	var itemGenerator itemgenerator.RandomItemGenerator
 	const numItems = 24
-	items := make([]list.Item, numItems)
-	for i := range numItems {
-		items[i] = itemGenerator.Next()
+	items := make([]list.Item, 0, numItems)
+	//for i := range numItems {
+	//	items[i] = itemGenerator.Next()
+	//}
+	for _, pkg := range m.workspaceRoot.Packages {
+		for name, script := range pkg.Scripts {
+			items = append(items, item.Item{TitleText: name, DescriptionText: script, Path: pkg.ContextPath, PackageName: pkg.Name})
+		}
 	}
 
 	// Setup list.
 	delegate := delegate.NewItemDelegate(delegateKeys, &m.styles)
+
 	groceryList := list.New(items, delegate, 0, 0)
 	groceryList.KeyMap.Quit = key.NewBinding(
 		key.WithKeys("q", "esc"),

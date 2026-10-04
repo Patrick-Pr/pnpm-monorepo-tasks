@@ -17,17 +17,13 @@ type PnpmWorkspaceRoot struct {
 }
 
 type WorkspacePackage struct {
-	Name    string
-	Version string
-	Scripts map[string]string
+	Name        string
+	Version     string
+	Scripts     map[string]string
+	ContextPath string
 }
 
-func RecognizeWorkspace() {
-	cwd, err := os.Getwd()
-	if err != nil {
-		log.Fatalln("Could not get the current Directory!")
-	}
-
+func ParseWorkspace(cwd string) (PnpmWorkspaceRoot, error) {
 	log.Println("Current Directory:", cwd)
 
 	worksPaceRootPath, err := findWorkspaceRoot(cwd)
@@ -37,10 +33,12 @@ func RecognizeWorkspace() {
 
 	log.Println("Workspace Root:", worksPaceRootPath)
 
-	_, err = constructWorkspace(worksPaceRootPath)
+	workspace, err := constructWorkspace(worksPaceRootPath)
 	if err != nil {
 		log.Fatalln("Filed parsing workspace root:", err)
 	}
+
+	return workspace, nil
 }
 
 func findWorkspaceRoot(cwd string) (string, error) {
@@ -100,7 +98,7 @@ func constructWorkspace(rootPath string) (PnpmWorkspaceRoot, error) {
 	packages := make([]string, 0, len(pnpmWorkspacePackages.Packages))
 	for _, glob := range pnpmWorkspacePackages.Packages {
 		files, err := doublestar.FilepathGlob(
-			glob,
+			filepath.Join(filepath.Dir(rootPath), glob),
 			doublestar.WithFilesOnly(),
 			doublestar.WithFailOnIOErrors(),
 		)
@@ -120,9 +118,10 @@ func constructWorkspace(rootPath string) (PnpmWorkspaceRoot, error) {
 		}
 		log.Println("packageJson:", packageJson)
 		workspacePackages = append(workspacePackages, &WorkspacePackage{
-			Name:    packageJson.Name,
-			Version: packageJson.Version,
-			Scripts: packageJson.Scipts,
+			Name:        packageJson.Name,
+			Version:     packageJson.Version,
+			Scripts:     packageJson.Scipts,
+			ContextPath: filepath.Dir(packagePath),
 		})
 	}
 
