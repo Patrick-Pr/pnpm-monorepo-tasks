@@ -78,7 +78,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.list.SetShowHelp(!m.list.ShowHelp())
 			return m, nil
 		case key.Matches(msg, m.keys.insertItem):
-			m.delegateKeys.Remove.SetEnabled(true)
 			newItem := m.itemGenerator.Next()
 			insCmd := m.list.InsertItem(0, newItem)
 			statusCmd := m.list.NewStatusMessage(m.styles.StatusMessage.Render("Added " + newItem.TitleText))
@@ -137,7 +136,7 @@ func InitialModel() Model {
 		key.WithKeys("q", "esc"),
 		key.WithHelp("q/esc", "quit"),
 	)
-	groceryList.Title = "Groceries"
+	groceryList.Title = "Workspace Packages"
 	groceryList.Styles.Title = m.styles.Title
 	groceryList.AdditionalShortHelpKeys = func() []key.Binding {
 		return []key.Binding{listKeys.insertItem}

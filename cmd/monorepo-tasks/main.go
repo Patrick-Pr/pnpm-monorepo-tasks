@@ -9,7 +9,6 @@ import (
 
 func main() {
 	p := tea.NewProgram(model.InitialModel())
-	p.ReleaseTerminal()
 	if _, err := p.Run(); err != nil {
 		log.Fatalf("Alas, theres ben an error: %v", err)
 	}
